@@ -65,6 +65,7 @@
 #include "runtime/stackWatermarkSet.inline.hpp"
 #include "utilities/debug.hpp"
 #include "utilities/exceptions.hpp"
+#include "utilities/dtrace.hpp"
 #include "utilities/macros.hpp"
 #if INCLUDE_ZGC
 #include "gc/z/zStackChunkGCData.inline.hpp"
@@ -1579,6 +1580,9 @@ static inline int freeze_internal(JavaThread* current, intptr_t* const sp) {
     verify_continuation(cont.continuation());
     freeze_result res = entry->is_pinned() ? freeze_pinned_cs : freeze_pinned_monitor;
     log_develop_trace(continuations)("=== end of freeze (fail %d)", res);
+    if (entry->is_virtual_thread()) {
+      HOTSPOT_VTHREAD_FREEZE((uintptr_t)os::current_thread_id(), (int)res);
+    }
     return res;
   }
 
@@ -1590,6 +1594,9 @@ static inline int freeze_internal(JavaThread* current, intptr_t* const sp) {
     freeze.freeze_fast_existing_chunk();
     CONT_JFR_ONLY(freeze.jfr_info().post_jfr_event(&event, oopCont, current);)
     freeze_epilog(current, cont);
+    if (entry->is_virtual_thread()) {
+      HOTSPOT_VTHREAD_FREEZE((uintptr_t)os::current_thread_id(), freeze_ok);
+    }
     return 0;
   }
 
@@ -1605,6 +1612,9 @@ static inline int freeze_internal(JavaThread* current, intptr_t* const sp) {
     CONT_JFR_ONLY(freeze.jfr_info().post_jfr_event(&event, oopCont, current);)
     freeze_epilog(current, cont, res);
     cont.done(); // allow safepoint in the transition back to Java
+    if (entry->is_virtual_thread()) {
+      HOTSPOT_VTHREAD_FREEZE((uintptr_t)os::current_thread_id(), (int)res);
+    }
     return res;
   JRT_BLOCK_END
 }
@@ -2471,6 +2481,9 @@ static inline intptr_t* thaw_internal(JavaThread* thread, const Continuation::th
   verify_continuation(cont.continuation());
   log_develop_debug(continuations)("=== End of thaw #" INTPTR_FORMAT, cont.hash());
 
+  if (entry->is_virtual_thread()) {
+    HOTSPOT_VTHREAD_THAW((uintptr_t)os::current_thread_id(), (int)kind);
+  }
   return sp;
 }
 
