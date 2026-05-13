@@ -142,6 +142,8 @@ final class VirtualThread extends BaseVirtualThread {
     // termination object when joining, created lazily if needed
     private volatile CountDownLatch termination;
 
+    // trace info that can be read by eBPF
+    private final long traceBufferAddress;
     /**
      * Returns the continuation scope used for virtual threads.
      */
@@ -178,6 +180,8 @@ final class VirtualThread extends BaseVirtualThread {
         this.scheduler = scheduler;
         this.cont = new VThreadContinuation(this, task);
         this.runContinuation = this::runContinuation;
+        this.traceBufferAddress = U.allocateMemory(64);
+        U.putLong(traceBufferAddress,threadId());
     }
 
     /**
@@ -510,6 +514,11 @@ final class VirtualThread extends BaseVirtualThread {
      * @param notifyContainer true if its container should be notified
      */
     private void afterDone(boolean notifyContainer) {
+        // release off heap mem
+        assert carrierThread == null;
+        setState(TERMINATED);
+        U.freeMemory(traceBufferAddress);
+
         assert carrierThread == null;
         setState(TERMINATED);
 

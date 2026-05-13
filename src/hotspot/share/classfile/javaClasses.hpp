@@ -523,6 +523,7 @@ class java_lang_VirtualThread : AllStatic {
   static int _carrierThread_offset;
   static int _continuation_offset;
   static int _state_offset;
+  static int _traceBufferAddress_offset;
   JFR_ONLY(static int _jfr_epoch_offset;)
  public:
   enum {
@@ -557,6 +558,7 @@ class java_lang_VirtualThread : AllStatic {
   static oop carrier_thread(oop vthread);
   static oop continuation(oop vthread);
   static int state(oop vthread);
+  static jlong trace_buffer_address(oop vthread);
   static JavaThreadStatus map_state_to_thread_status(int state);
 };
 

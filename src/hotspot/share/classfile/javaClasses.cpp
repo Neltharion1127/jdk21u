@@ -1972,13 +1972,14 @@ int java_lang_VirtualThread::static_vthread_scope_offset;
 int java_lang_VirtualThread::_carrierThread_offset;
 int java_lang_VirtualThread::_continuation_offset;
 int java_lang_VirtualThread::_state_offset;
+int java_lang_VirtualThread::_traceBufferAddress_offset;
 
 #define VTHREAD_FIELDS_DO(macro) \
   macro(static_vthread_scope_offset,       k, "VTHREAD_SCOPE",      continuationscope_signature, true);  \
   macro(_carrierThread_offset,             k, "carrierThread",      thread_signature,            false); \
   macro(_continuation_offset,              k, "cont",               continuation_signature,      false); \
-  macro(_state_offset,                     k, "state",              int_signature,               false)
-
+  macro(_state_offset,                     k, "state",              int_signature,               false); \
+  macro(_traceBufferAddress_offset, k, "traceBufferAddress", long_signature, false);
 
 void java_lang_VirtualThread::compute_offsets() {
   InstanceKlass* k = vmClasses::VirtualThread_klass();
@@ -2001,6 +2002,10 @@ oop java_lang_VirtualThread::continuation(oop vthread) {
 
 int java_lang_VirtualThread::state(oop vthread) {
   return vthread->int_field_acquire(_state_offset);
+}
+
+jlong java_lang_VirtualThread::trace_buffer_address(oop vthread) {
+  return vthread->long_field(_traceBufferAddress_offset);
 }
 
 JavaThreadStatus java_lang_VirtualThread::map_state_to_thread_status(int state) {
