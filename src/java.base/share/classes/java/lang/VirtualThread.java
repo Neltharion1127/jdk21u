@@ -143,14 +143,19 @@ final class VirtualThread extends BaseVirtualThread {
     private volatile CountDownLatch termination;
 
     // trace info that can be read by eBPF
+
     private final long traceBufferAddress;
+
+    public long getTraceBufferAddress(){
+        return traceBufferAddress;
+    }
     /**
      * Returns the continuation scope used for virtual threads.
      */
     static ContinuationScope continuationScope() {
         return VTHREAD_SCOPE;
     }
-
+    
     /**
      * Creates a new {@code VirtualThread} to run the given task with the given
      * scheduler. If the given scheduler is {@code null} and the current thread

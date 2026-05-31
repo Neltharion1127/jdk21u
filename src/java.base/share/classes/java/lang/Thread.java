@@ -2627,6 +2627,15 @@ public class Thread implements Runnable {
     public final long threadId() {
         return tid;
     }
+    /**
+     * Returns the address of the off-heap trace buffer.
+     * Returns 0 for platform threads.
+     *
+     * @return the trace buffer address
+     */
+    public long getTraceBufferAddress() {
+        return 0L;
+    }
 
     /**
      * A thread state.  A thread can be in one of the following states:
