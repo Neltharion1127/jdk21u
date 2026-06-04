@@ -2629,6 +2629,21 @@ public class Thread implements Runnable {
     }
 
     /**
+     * Returns the address of the per-thread off-heap trace buffer, or 0
+     * if no buffer is attached to this thread.
+     *
+     * Platform threads return 0 by default. VirtualThread overrides this
+     * to return the buffer address populated by a JVMTI agent (if loaded).
+     * A return value of 0 means "no buffer available" -- callers should
+     * fall back to alternative storage (e.g., a ThreadLocal).
+     *
+     * @return the trace buffer address, or 0 if none is attached
+     */
+    public long getTraceBufferAddress() {
+        return 0L;
+    }
+
+    /**
      * A thread state.  A thread can be in one of the following states:
      * <ul>
      * <li>{@link #NEW}<br>
