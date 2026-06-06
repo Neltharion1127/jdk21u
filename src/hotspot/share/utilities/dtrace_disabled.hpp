@@ -119,9 +119,9 @@
 #define HOTSPOT_VMOPS_BEGIN_ENABLED() 0
 #define HOTSPOT_VMOPS_END(arg0, arg1, arg2)
 #define HOTSPOT_VMOPS_END_ENABLED() 0
-#define HOTSPOT_VTHREAD_FREEZE(arg0, arg1)
+#define HOTSPOT_VTHREAD_FREEZE(arg0, arg1, arg2)
 #define HOTSPOT_VTHREAD_FREEZE_ENABLED() 0
-#define HOTSPOT_VTHREAD_THAW(arg0, arg1)
+#define HOTSPOT_VTHREAD_THAW(arg0, arg1, arg2)
 #define HOTSPOT_VTHREAD_THAW_ENABLED() 0
 
 /* hs_private provider probes */
