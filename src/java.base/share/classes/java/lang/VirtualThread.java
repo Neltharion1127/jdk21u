@@ -142,6 +142,8 @@ final class VirtualThread extends BaseVirtualThread {
     // termination object when joining, created lazily if needed
     private volatile CountDownLatch termination;
 
+    private static final boolean JVM_ALLOC_TRACE_BUF = Boolean.getBoolean("vthread.trace.jvmAlloc");
+
     // trace info that can be read by eBPF
     private volatile long traceBufferAddress;
 
@@ -518,6 +520,10 @@ final class VirtualThread extends BaseVirtualThread {
      * @param notifyContainer true if its container should be notified
      */
     private void afterDone(boolean notifyContainer) {
+        if (JVM_ALLOC_TRACE_BUF && traceBufferAddress != 0) {
+            U.freeMemory(traceBufferAddress);
+            traceBufferAddress = 0;
+        }
         assert carrierThread == null;
         setState(TERMINATED);
 
@@ -558,6 +564,12 @@ final class VirtualThread extends BaseVirtualThread {
         boolean addedToContainer = false;
         boolean started = false;
         try {
+            // allocate per-vthread trace buffer (paired with free in afterDone)
+            if (JVM_ALLOC_TRACE_BUF) {
+                long buf = U.allocateMemory(64);
+                U.setMemory(buf, 64, (byte) 0);
+                this.traceBufferAddress = buf;
+            }
             container.onStart(this);  // may throw
             addedToContainer = true;
 
