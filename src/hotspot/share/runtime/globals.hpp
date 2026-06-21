@@ -1832,6 +1832,10 @@ const int ObjectAlignmentInBytes = 8;
   product(bool, DTraceMonitorProbes, false,                                 \
           "Enable dtrace tool probes for monitor events")                   \
                                                                             \
+  product(bool, VThreadTraceProbes, false,                                  \
+          "Emit USDT virtual-thread freeze/thaw tracepoints for "           \
+          "carrier<->vthread trace-context correlation")                    \
+                                                                            \
   product(bool, RelaxAccessControlCheck, false,                             \
           "Relax the access control checks in the verifier")                \
                                                                             \
