@@ -147,6 +147,10 @@ final class VirtualThread extends BaseVirtualThread {
     // trace info that can be read by eBPF
     private volatile long traceBufferAddress;
 
+    // true if the -XX:+VThreadTraceProbes USDT probes are enabled,
+    // assigned in the static initializer after registerNatives()
+    private static final boolean TRACE_PROBES;
+
     @Override
     public long getTraceBufferAddress() {
         return traceBufferAddress;
@@ -327,6 +331,20 @@ final class VirtualThread extends BaseVirtualThread {
         // notify JVMTI, may post VirtualThreadStart event
         notifyJvmtiStart();
 
+        // fire vthread start trace probe. This runs on the carrier after the
+        // first mount (which does not go through thaw), strictly before any
+        // user code. It must be after notifyJvmtiStart(): with a JVMTI
+        // allocating agent the trace buffer is allocated by the
+        // VirtualThreadStart callback (dispatched synchronously from
+        // notifyJvmtiStart) and written to traceBufferAddress, so firing
+        // earlier would carry a null address; with jvmalloc the address is
+        // set before run() and the order does not matter. It must not be in
+        // start(), which runs on the creator thread where
+        // Thread.currentThread() is not this virtual thread.
+        if (TRACE_PROBES) {
+            notifyTraceStart();
+        }
+
         // emit JFR event if enabled
         if (VirtualThreadStartEvent.isTurnedOn()) {
             var event = new VirtualThreadStartEvent();
@@ -352,6 +370,17 @@ final class VirtualThread extends BaseVirtualThread {
                 }
 
             } finally {
+                // fire vthread end trace probe. Termination (which does not
+                // go through freeze) is reached here on both normal and
+                // exceptional task completion. It must be before
+                // notifyJvmtiEnd(): a JVMTI allocating agent frees the trace
+                // buffer in its VirtualThreadEnd callback, so the consumer
+                // must drop its mapping before the free, keeping the mapping
+                // lifetime nested inside the buffer lifetime.
+                if (TRACE_PROBES) {
+                    notifyTraceEnd();
+                }
+
                 // notify JVMTI, may post VirtualThreadEnd event
                 notifyJvmtiEnd();
             }
@@ -1153,9 +1182,23 @@ final class VirtualThread extends BaseVirtualThread {
     @JvmtiMountTransition
     private native void notifyJvmtiHideFrames(boolean hide);
 
+    // -- VThreadTraceProbes support --
+
+    // These must NOT be @IntrinsicCandidate: an intrinsic would allow C2 to
+    // remove the call from compiled code when its VM-side mechanism is off,
+    // making probe events silently dependent on JIT compilation state. (This
+    // is also why notifyJvmtiStart/End, which are intrinsics tied to the
+    // _VTMS_notify_jvmti_events mechanism, cannot be reused for tracing.)
+    private native void notifyTraceStart();
+    private native void notifyTraceEnd();
+
+    // returns the value of the -XX:[+-]VThreadTraceProbes flag
+    private static native boolean traceProbesEnabled();
+
     private static native void registerNatives();
     static {
         registerNatives();
+        TRACE_PROBES = traceProbesEnabled();
     }
 
     /**

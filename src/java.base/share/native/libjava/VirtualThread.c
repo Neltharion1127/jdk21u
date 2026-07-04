@@ -37,6 +37,9 @@ static JNINativeMethod methods[] = {
     { "notifyJvmtiMount",        "(Z)V", (void *)&JVM_VirtualThreadMount },
     { "notifyJvmtiUnmount",      "(Z)V", (void *)&JVM_VirtualThreadUnmount },
     { "notifyJvmtiHideFrames",   "(Z)V", (void *)&JVM_VirtualThreadHideFrames },
+    { "notifyTraceStart",        "()V",  (void *)&JVM_VirtualThreadTraceStart },
+    { "notifyTraceEnd",          "()V",  (void *)&JVM_VirtualThreadTraceEnd },
+    { "traceProbesEnabled",      "()Z",  (void *)&JVM_VirtualThreadTraceProbesEnabled },
 };
 
 JNIEXPORT void JNICALL
