@@ -4009,6 +4009,30 @@ JVM_ENTRY(void, JVM_VirtualThreadHideFrames(JNIEnv* env, jobject vthread, jboole
 #endif
 JVM_END
 
+// Support for the VThreadTraceProbes USDT probes. These fire once per
+// virtual thread lifetime, from java.lang.VirtualThread.run(task), so that
+// tracers can observe the first mount (which does not go through thaw) and
+// termination (which does not go through freeze).
+
+JVM_ENTRY(void, JVM_VirtualThreadTraceStart(JNIEnv* env, jobject vthread))
+  if (VThreadTraceProbes) {
+    oop vt = JNIHandles::resolve_non_null(vthread);
+    HOTSPOT_VTHREAD_START((uintptr_t)java_lang_Thread::thread_id(vt),
+                          (uintptr_t)java_lang_VirtualThread::trace_buffer_address(vt));
+  }
+JVM_END
+
+JVM_ENTRY(void, JVM_VirtualThreadTraceEnd(JNIEnv* env, jobject vthread))
+  if (VThreadTraceProbes) {
+    oop vt = JNIHandles::resolve_non_null(vthread);
+    HOTSPOT_VTHREAD_END((uintptr_t)java_lang_Thread::thread_id(vt));
+  }
+JVM_END
+
+JVM_ENTRY(jboolean, JVM_VirtualThreadTraceProbesEnabled(JNIEnv* env, jclass clazz))
+  return VThreadTraceProbes ? JNI_TRUE : JNI_FALSE;
+JVM_END
+
 /*
  * Return the current class's class file version.  The low order 16 bits of the
  * returned jint contain the class's major version.  The high order 16 bits

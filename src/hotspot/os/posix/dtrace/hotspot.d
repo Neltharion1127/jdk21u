@@ -79,6 +79,8 @@ provider hotspot {
     int, char*, int, char*, int, char*, int);
   probe vthread__freeze(uintptr_t, int, uintptr_t);
   probe vthread__thaw(uintptr_t, int, uintptr_t);
+  probe vthread__start(uintptr_t, uintptr_t);
+  probe vthread__end(uintptr_t);
 };
 
 #pragma D attributes Evolving/Evolving/Common provider hotspot provider
